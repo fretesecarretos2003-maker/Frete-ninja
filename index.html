@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -27,7 +26,6 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-tap-highlight-color: transparent;
-      touch-action: none; /* Impede o telemóvel de fazer scroll ao deslizar */
     }
 
     body {
@@ -38,6 +36,7 @@
       min-height: 100vh;
       min-height: 100dvh;
       overflow: hidden;
+      touch-action: none;
     }
 
     #game-container {
@@ -75,27 +74,26 @@
       position: absolute;
       top: 0;
       left: 0;
-      z-index: 1;
+      z-index: 2;
     }
 
-    /* --- INTERFACE / HUD EM JOGO --- */
+    /* --- HUD SUPERIOR --- */
     #hud {
       position: absolute;
-      top: 12px;
+      top: 14px;
       left: 0;
       width: 100%;
       padding: 10px 16px;
       display: none;
       justify-content: space-between;
       align-items: center;
-      z-index: 5;
+      z-index: 8;
       pointer-events: none;
     }
 
     .hud-box {
-      background: rgba(10, 25, 47, 0.75);
-      border: 1px solid rgba(255, 107, 0, 0.4);
-      backdrop-filter: blur(4px);
+      background: rgba(10, 25, 47, 0.85);
+      border: 1px solid rgba(255, 107, 0, 0.5);
       padding: 6px 14px;
       border-radius: 20px;
       display: flex;
@@ -124,16 +122,12 @@
       font-size: 1.3rem;
     }
 
-    .life-heart {
-      transition: transform 0.2s, opacity 0.2s;
-    }
-
     .life-heart.lost {
       opacity: 0.25;
       filter: grayscale(1);
     }
 
-    /* --- TELAS DE MENU (START E GAME OVER) --- */
+    /* --- TELAS DE INTERFACE --- */
     .ui-layer {
       position: absolute;
       inset: 0;
@@ -143,14 +137,13 @@
       justify-content: space-between;
       padding: 24px 20px;
       z-index: 20;
-      background: rgba(5, 11, 20, 0.88);
+      background: rgba(5, 11, 20, 0.92);
       text-align: center;
-      animation: fadeIn 0.3s ease;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    .ui-layer.hidden {
+      display: none !important;
+      pointer-events: none !important;
     }
 
     .brand-badge {
@@ -192,8 +185,8 @@
     }
 
     .hero-art {
-      width: 130px;
-      height: 130px;
+      width: 120px;
+      height: 120px;
       background: rgba(255, 255, 255, 0.05);
       border: 3px solid var(--orange);
       border-radius: 50%;
@@ -201,29 +194,23 @@
       align-items: center;
       justify-content: center;
       margin: 15px auto;
-      font-size: 3.8rem;
+      font-size: 3.5rem;
       box-shadow: 0 0 35px rgba(255, 107, 0, 0.3);
     }
 
     .instruction-card {
-      background: rgba(23, 42, 69, 0.8);
+      background: rgba(23, 42, 69, 0.85);
       border: 1px solid rgba(255, 183, 3, 0.3);
       border-radius: 14px;
       padding: 12px 16px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
       text-align: left;
       font-size: 0.85rem;
       color: #cbd5e1;
       max-width: 330px;
       margin: 10px auto;
-    }
-
-    .instruction-card span {
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
     .btn {
@@ -240,16 +227,11 @@
       border-radius: 40px;
       cursor: pointer;
       box-shadow: 0 4px 20px rgba(255, 107, 0, 0.4);
-      transition: transform 0.1s;
+      touch-action: manipulation;
     }
 
     .btn:active {
       transform: scale(0.96);
-    }
-
-    /* Tela de Game Over */
-    #screen-gameover {
-      display: none;
     }
 
     .score-summary {
@@ -260,15 +242,6 @@
       width: 100%;
       max-width: 300px;
       margin: 10px auto;
-    }
-
-    .rank-tag {
-      font-size: 0.8rem;
-      font-weight: 800;
-      color: var(--amber);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-top: 4px;
     }
   </style>
 </head>
@@ -296,10 +269,10 @@
     </div>
   </div>
 
-  <!-- CANVAS DO JOGO (ONDE Acontece O FRUIT NINJA) -->
+  <!-- CANVAS PRINCIPAL -->
   <canvas id="game-canvas"></canvas>
 
-  <!-- TELA INICIAL (START) -->
+  <!-- TELA INICIAL -->
   <div class="ui-layer" id="screen-start">
     <div>
       <div class="brand-badge">★ Desafio Rápido de Logística</div>
@@ -309,16 +282,16 @@
     </div>
 
     <div class="instruction-card">
-      <span>👆 <b>Deslize rápido</b> para cortar as cargas ao meio.</span>
-      <span>💣 <b>NUNCA corte</b> cargas perigosas/explosivos!</span>
-      <span>📦 <b>Não deixe cair:</b> cada caixa perdida custa 1 vida.</span>
+      <div>👆 <b>Deslize o dedo</b> para cortar as cargas ao meio.</div>
+      <div>💣 <b>NUNCA corte</b> bombas e explosivos!</div>
+      <div>📦 <b>Não deixe cair:</b> cada caixa perdida custa 1 vida.</div>
     </div>
 
-    <button class="btn" onclick="startGame()">Começar Carregamento ⚡</button>
+    <button class="btn" id="btn-start" type="button">Começar Carregamento ⚡</button>
   </div>
 
-  <!-- TELA DE FIM DE JOGO (GAME OVER) -->
-  <div class="ui-layer" id="screen-gameover">
+  <!-- TELA DE GAME OVER -->
+  <div class="ui-layer hidden" id="screen-gameover">
     <div>
       <div class="brand-badge" style="border-color:var(--red); color:var(--red);">Turno Finalizado</div>
       <h1 style="color:var(--orange);">Fim <span>de Jogo!</span></h1>
@@ -328,55 +301,418 @@
     <div class="score-summary">
       <div style="font-size: 0.8rem; color:#94a3b8; text-transform:uppercase;">Pontuação Final</div>
       <div style="font-size: 2.8rem; font-weight:900; color:var(--amber);" id="final-score">0</div>
-      <div class="rank-tag" id="rank-display">Ajudante de Carga</div>
+      <div style="font-size: 0.85rem; font-weight: 800; color: var(--amber); text-transform: uppercase;" id="rank-display">Ajudante de Carga</div>
       <div style="font-size: 0.75rem; color:#64748b; margin-top:8px;" id="record-notice">Recorde Atual: 0</div>
     </div>
 
-    <button class="btn" onclick="startGame()">Jogar Novamente 🔄</button>
+    <button class="btn" id="btn-restart" type="button">Jogar Novamente 🔄</button>
   </div>
 
   <div class="warning-tape"></div>
 </div>
 
 <script>
-  // --- 1. ÁUDIO SINTÉTICO (WEB AUDIO API - SEM FICHEIROS EXTERNOS) ---
+  // --- 1. ÁUDIO SEGURO (SEM TRAVAMENTOS) ---
   const AudioEngine = {
     ctx: null,
     init() {
-      if (!this.ctx) {
-        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (this.ctx.state === 'suspended') {
-        this.ctx.resume();
+      try {
+        if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      } catch (e) {
+        console.warn("Áudio não disponível.");
       }
     },
     playSlice() {
       if (!this.ctx) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.12);
-      gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.12);
+      try {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.12);
+      } catch(e){}
     },
     playBomb() {
       if (!this.ctx) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(120, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.4);
-      gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.4);
+      try {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.4);
+        gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.4);
+      } catch(e){}
+    },
+    playDrop() {
+      if (!this.ctx) return;
+      try {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(250, this.ctx.currentTime);
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.2);
+      } catch(e){}
+    }
+  };
+
+  // --- 2. TIPOS DE ITENS ---
+  const CARGO_TYPES = [
+    { name: "Caixa",      icon: "📦", points: 10, radius: 36, isBomb: false },
+    { name: "Sofá",       icon: "🛋️", points: 15, radius: 40, isBomb: false },
+    { name: "TV",         icon: "📺", points: 20, radius: 36, isBomb: false },
+    { name: "Cama",       icon: "🛏️", points: 15, radius: 38, isBomb: false },
+    { name: "Geladeira",  icon: "🧊", points: 25, radius: 40, isBomb: false },
+    { name: "Cadeira",    icon: "🪑", points: 10, radius: 34, isBomb: false },
+    { name: "BOMBA",      icon: "💣", points: 0,  radius: 38, isBomb: true  }
+  ];
+
+  // --- 3. ESTADOS ---
+  let canvas = null, ctx = null;
+  let width = 360, height = 640;
+  let isPlaying = false;
+  let score = 0;
+  let lives = 3;
+  let highScore = 0;
+
+  try {
+    highScore = parseInt(localStorage.getItem('frete_ninja_best') || '0', 10) || 0;
+  } catch (e) {
+    highScore = 0;
+  }
+
+  let items = [];
+  let slicedPieces = [];
+  let particles = [];
+  let bladeTrail = [];
+  let spawnTimer = null;
+
+  // --- 4. REDIMENSIONAMENTO ---
+  function updateCanvasDimensions() {
+    const container = document.getElementById("game-container");
+    width = container.clientWidth || window.innerWidth || 360;
+    height = container.clientHeight || window.innerHeight || 640;
+    if (canvas) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+  }
+
+  // --- 5. INICIALIZAÇÃO DA PÁGINA ---
+  function setupGameEnvironment() {
+    canvas = document.getElementById("game-canvas");
+    ctx = canvas.getContext("2d");
+    updateCanvasDimensions();
+    window.addEventListener("resize", updateCanvasDimensions);
+
+    document.getElementById("best-display").innerText = highScore;
+
+    // Configuração dos botões para responderem imediatamente
+    const btnStart = document.getElementById("btn-start");
+    const btnRestart = document.getElementById("btn-restart");
+
+    const handleStartAction = (e) => {
+      if (e) e.preventDefault();
+      executeGameStart();
+    };
+
+    btnStart.addEventListener("click", handleStartAction);
+    btnStart.addEventListener("touchstart", handleStartAction, { passive: false });
+
+    btnRestart.addEventListener("click", handleStartAction);
+    btnRestart.addEventListener("touchstart", handleStartAction, { passive: false });
+
+    setupInputTracking();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setupGameEnvironment);
+  } else {
+    setupGameEnvironment();
+  }
+
+  // --- 6. INÍCIO DA PARTIDA ---
+  function executeGameStart() {
+    AudioEngine.init();
+
+    score = 0;
+    lives = 3;
+    items = [];
+    slicedPieces = [];
+    particles = [];
+    bladeTrail = [];
+
+    document.getElementById("score-display").innerText = "0";
+    document.getElementById("screen-start").classList.add("hidden");
+    document.getElementById("screen-gameover").classList.add("hidden");
+    document.getElementById("hud").style.display = "flex";
+
+    updateHeartsUI();
+
+    isPlaying = true;
+    clearTimeout(spawnTimer);
+
+    // Dispara a primeira caixa na hora!
+    spawnCargoWave();
+    scheduleNextSpawn();
+
+    requestAnimationFrame(renderGameFrame);
+  }
+
+  function scheduleNextSpawn() {
+    if (!isPlaying) return;
+    const delay = Math.max(900, 1900 - Math.min(score * 10, 1000));
+    spawnTimer = setTimeout(() => {
+      spawnCargoWave();
+      scheduleNextSpawn();
+    }, delay);
+  }
+
+  function spawnCargoWave() {
+    if (!isPlaying) return;
+    const waveCount = Math.random() < 0.4 ? 2 : (score > 100 && Math.random() < 0.2 ? 3 : 1);
+
+    for (let i = 0; i < waveCount; i++) {
+      setTimeout(() => {
+        if (!isPlaying) return;
+
+        const isBomb = score >= 20 && Math.random() < 0.22;
+        const config = isBomb 
+          ? CARGO_TYPES.find(c => c.isBomb)
+          : CARGO_TYPES[Math.floor(Math.random() * (CARGO_TYPES.length - 1))];
+
+        const x = width * 0.18 + Math.random() * (width * 0.64);
+        const y = height + 40;
+
+        // Força calculada para subir exatamente entre 60% e 80% da altura da tela
+        const jumpDistance = height * (0.62 + Math.random() * 0.22);
+        const gravity = 0.36;
+        const vy = -Math.sqrt(2 * gravity * jumpDistance);
+        const vx = ((width / 2 - x) / (width / 2)) * (1.5 + Math.random() * 1.5);
+
+        items.push({
+          ...config,
+          x, y, vx, vy,
+          gravity,
+          rotation: 0,
+          vRot: (Math.random() - 0.5) * 0.08
+        });
+      }, i * 240);
+    }
+  }
+
+  function renderGameFrame() {
+    if (!isPlaying) return;
+
+    ctx.clearRect(0, 0, width, height);
+
+    updateBladeTrail();
+    updateItems();
+    updatePieces();
+    updateParticles();
+    drawBladeTrail();
+
+    requestAnimationFrame(renderGameFrame);
+  }
+
+  // --- 7. ATUALIZAÇÃO FÍSICA DOS ELEMENTOS ---
+  function updateItems() {
+    for (let i = items.length - 1; i >= 0; i--) {
+      const it = items[i];
+      it.x += it.vx;
+      it.y += it.vy;
+      it.vy += it.gravity;
+      it.rotation += it.vRot;
+
+      ctx.save();
+      ctx.translate(it.x, it.y);
+      ctx.rotate(it.rotation);
+
+      // Círculo luminoso base
+      ctx.beginPath();
+      ctx.arc(0, 0, it.radius, 0, Math.PI * 2);
+      ctx.fillStyle = it.isBomb ? "rgba(239, 68, 68, 0.25)" : "rgba(255, 107, 0, 0.2)";
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = it.isBomb ? "#ef4444" : "#ffb703";
+      ctx.stroke();
+
+      // Ícone
+      ctx.font = `${it.radius * 1.25}px sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(it.icon, 0, 2);
+      ctx.restore();
+
+      // Queda para além do rodapé
+      if (it.y > height + 60 && it.vy > 0) {
+        if (!it.isBomb) {
+          loseLife();
+        }
+        items.splice(i, 1);
+      }
+    }
+  }
+
+  function updatePieces() {
+    for (let i = slicedPieces.length - 1; i >= 0; i--) {
+      const p = slicedPieces[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += p.gravity;
+      p.rotation += p.vRot;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.font = `${p.radius}px sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.fillText(p.icon, 0, 0);
+      ctx.restore();
+
+      p.alpha -= 0.02;
+      if (p.y > height + 60 || p.alpha <= 0) {
+        slicedPieces.splice(i, 1);
+      }
+    }
+  }
+
+  function updateParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const pt = particles[i];
+      pt.x += pt.vx;
+      pt.y += pt.vy;
+      pt.vy += 0.2;
+      pt.alpha -= 0.025;
+
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+      ctx.fillStyle = pt.color;
+      ctx.globalAlpha = Math.max(0, pt.alpha);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      if (pt.alpha <= 0) particles.splice(i, 1);
+    }
+  }
+
+  // --- 8. RASTRO E CORTE ---
+  function setupInputTracking() {
+    const registerPoint = (clientX, clientY) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      bladeTrail.push({ x, y, time: performance.now() });
+      if (bladeTrail.length > 2) {
+        testCollisions();
+      }
+    };
+
+    // Toque no celular
+    window.addEventListener("touchstart", (e) => {
+      if (!isPlaying) return;
+      const t = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      bladeTrail = [{ x: t.clientX - rect.left, y: t.clientY - rect.top, time: performance.now() }];
+    }, { passive: true });
+
+    window.addEventListener("touchmove", (e) => {
+      if (!isPlaying) return;
+      const t = e.touches[0];
+      registerPoint(t.clientX, t.clientY);
+    }, { passive: true });
+
+    window.addEventListener("touchend", () => {
+      bladeTrail = [];
+    });
+
+    // Mouse para computador
+    let isMouseDown = false;
+    window.addEventListener("mousedown", (e) => {
+      if (!isPlaying) return;
+      isMouseDown = true;
+      const rect = canvas.getBoundingClientRect();
+      bladeTrail = [{ x: e.clientX - rect.left, y: e.clientY - rect.top, time: performance.now() }];
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!isPlaying || !isMouseDown) return;
+      registerPoint(e.clientX, e.clientY);
+    });
+
+    window.addEventListener("mouseup", () => {
+      isMouseDown = false;
+      bladeTrail = [];
+    });
+  }
+
+  function updateBladeTrail() {
+    const now = performance.now();
+    bladeTrail = bladeTrail.filter(pt => now - pt.time < 140);
+  }
+
+  function drawBladeTrail() {
+    if (bladeTrail.length < 2) return;
+
+    for (let i = 1; i < bladeTrail.length; i++) {
+      const p1 = bladeTrail[i - 1];
+      const p2 = bladeTrail[i];
+      const ratio = i / bladeTrail.length;
+
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.strokeStyle = ratio > 0.6 ? "#ffb703" : "#ff6b00";
+      ctx.lineWidth = ratio * 8;
+      ctx.lineCap = "round";
+      ctx.shadowColor = "#ffb703";
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  // --- 9. COLISÃO ---
+  function testCollisions() {
+    if (bladeTrail.length < 2) return;
+    const p1 = bladeTrail[bladeTrail.length - 2];
+    const p2 = bladeTrail[bladeTrail.length - 1];
+
+    for (let i = items.length - 1; i >= 0; i--) {
+      const it = items[i];
+      if (getSegmentDistance(it, p1, p2) <= it.radius) {
+        sliceCargo(i, it);
+      }
+    }
+  }
+
+  function getSegmentDistance(c, p1, p2) {
+    const l2 = (p2.x - p1.x)**2 + (p2.y - p1.y)**2;
+    if (l2 === 0) return Math.hypot(c.x - p1.x, c.y - p1.y);
+    let t = ((c.x - p1.x) * (c.stop(this.ctx.currentTime + 0.4);
     },
     playDrop() {
       if (!this.ctx) return;
